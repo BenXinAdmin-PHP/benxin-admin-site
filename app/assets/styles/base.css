@@ -1,0 +1,258 @@
+/*
+ * +----------------------------------------------------------------------
+ * | @project   BenXinAdmin
+ * | @mission   官网基础样式（reset / 排版 / 布局工具类 / 科技质感元素 / 动效）
+ * | @author    仗键天涯(daxing)
+ * | @email     3442535897@qq.com
+ * | @date      2026-06-17
+ * +----------------------------------------------------------------------
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--bx-font-sans);
+  font-size: var(--bx-fs-base);
+  line-height: 1.7;
+  color: var(--bx-text);
+  background: var(--bx-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* 全局点阵 + 顶部光晕背景 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(43, 111, 255, 0.18) 0%, transparent 55%),
+    var(--bx-bg);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: radial-gradient(120% 90% at 50% 0%, #000 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 0%, transparent 75%);
+  pointer-events: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+h1,
+h2,
+h3,
+p,
+ul,
+figure {
+  margin: 0;
+}
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+/* —— 布局 —— */
+.bx-container {
+  width: 100%;
+  max-width: var(--bx-maxw);
+  margin: 0 auto;
+  padding-inline: 24px;
+}
+.bx-section {
+  position: relative;
+  padding-block: var(--bx-space-9);
+}
+@media (max-width: 720px) {
+  .bx-section {
+    padding-block: var(--bx-space-8);
+  }
+}
+
+.bx-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--bx-font-mono);
+  font-size: var(--bx-fs-eyebrow);
+  letter-spacing: 0.04em;
+  color: var(--bx-text-2);
+  padding: 6px 14px;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius-pill);
+  background: var(--bx-surface);
+}
+
+.bx-section__head {
+  max-width: 760px;
+  margin-bottom: var(--bx-space-7);
+}
+.bx-section__title {
+  font-family: var(--bx-font-brand);
+  font-size: var(--bx-fs-section);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.bx-section__desc {
+  margin-top: var(--bx-space-4);
+  color: var(--bx-text-2);
+  font-size: var(--bx-fs-lg);
+}
+
+/* 渐变文字强调 */
+.bx-grad-text {
+  background: var(--bx-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* —— 玻璃拟态卡片 —— */
+.bx-card {
+  position: relative;
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius-lg);
+  background: var(--bx-glass);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: var(--bx-shadow);
+  transition: border-color var(--bx-dur) var(--bx-ease),
+    transform var(--bx-dur) var(--bx-ease);
+}
+.bx-card:hover {
+  border-color: var(--bx-border-brand);
+  transform: translateY(-4px);
+}
+
+/* —— 按钮 —— */
+.bx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding-inline: 26px;
+  border: 1px solid transparent;
+  border-radius: var(--bx-radius-pill);
+  font-weight: 600;
+  font-size: var(--bx-fs-base);
+  transition: transform 0.2s var(--bx-ease), box-shadow 0.3s var(--bx-ease),
+    background 0.3s var(--bx-ease);
+}
+.bx-btn:active {
+  transform: translateY(1px);
+}
+.bx-btn--primary {
+  color: var(--bx-text-on-brand);
+  background: var(--bx-grad);
+  box-shadow: var(--bx-shadow-brand);
+}
+.bx-btn--primary:hover {
+  box-shadow: 0 18px 50px rgba(43, 111, 255, 0.5);
+  transform: translateY(-2px);
+}
+.bx-btn--ghost {
+  color: var(--bx-text);
+  background: var(--bx-surface);
+  border-color: var(--bx-border-strong);
+}
+.bx-btn--ghost:hover {
+  border-color: var(--bx-border-brand);
+  background: var(--bx-surface-2);
+}
+
+/* —— chip 标签 —— */
+.bx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: var(--bx-fs-sm);
+  color: var(--bx-text-2);
+  border: 1px solid var(--bx-border);
+  border-radius: var(--bx-radius-pill);
+  background: var(--bx-surface);
+}
+
+/* 等宽代码块 */
+.bx-code {
+  font-family: var(--bx-font-mono);
+  font-size: var(--bx-fs-sm);
+  color: var(--bx-text-2);
+}
+
+/* —— scroll-reveal 进入视口淡入上移 —— */
+.bx-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s var(--bx-ease), transform 0.7s var(--bx-ease);
+  will-change: opacity, transform;
+}
+.bx-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bx-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* 无障碍：跳转链接 */
+.bx-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--bx-brand);
+  color: #fff;
+  border-radius: 0 0 var(--bx-radius) 0;
+}
+.bx-skip:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--bx-brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

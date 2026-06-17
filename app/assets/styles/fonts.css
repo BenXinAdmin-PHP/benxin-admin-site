@@ -1,0 +1,41 @@
+/*
+ * +----------------------------------------------------------------------
+ * | @project   BenXinAdmin
+ * | @mission   官网字体自托管 @font-face（Geist / Geist Mono / 思源黑体子集，全 OFL）
+ * | @author    仗键天涯(daxing)
+ * | @email     3442535897@qq.com
+ * | @date      2026-06-17
+ * +----------------------------------------------------------------------
+ * 说明：全部 OFL 可商用、自托管 woff2，禁第三方 CDN 在线引用（资源合规 §10）。
+ *  - Geist / Geist Mono：拉丁与数字正文/等宽（Vercel，OFL-1.1）。
+ *  - 思源黑体子集：仅供品牌标题/Hero 大字（.font-brand），按 zh.json 字符子集化控体积。
+ *    首屏中文正文走系统中文字体栈（性能优先），不加载思源。
+ */
+
+/* —— Geist Sans（可变字重 100–900）—— */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* —— Geist Mono（可变字重 100–900，代码/命令/数字点缀）—— */
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* —— 思源黑体 SC 子集（可变字重 100–900，仅品牌标题）—— */
+@font-face {
+  font-family: 'Source Han Sans SC Subset';
+  src: url('/fonts/SourceHanSansSC-subset.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  /* 子集仅含 zh.json 出现的 CJK + 常用标点；正文中文不应用此族 */
+}
