@@ -5,17 +5,19 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
+  块类型 = prose。数据源由 i18n key 改为 api/兜底 props.block（M6-D schema 驱动）。
 -->
 <script setup lang="ts">
-const { t } = useI18n()
+defineProps<{ block: Record<string, any> }>()
 </script>
 
 <template>
   <section class="why bx-section">
     <div class="bx-container why__inner">
-      <h2 class="why__title bx-reveal" v-reveal>{{ t('why.title') }}</h2>
-      <p class="why__body bx-reveal" v-reveal="120">{{ t('why.body') }}</p>
+      <h2 class="why__title bx-reveal" v-reveal>{{ block.title }}</h2>
+      <p class="why__body bx-reveal" v-reveal="120">{{ block.body }}</p>
     </div>
   </section>
 </template>

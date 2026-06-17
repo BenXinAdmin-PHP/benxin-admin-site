@@ -5,22 +5,22 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
+  块类型 = security。标题/正文/chips 由 i18n key 改为 api/兜底 props.block。
 -->
 <script setup lang="ts">
-const { t, tm, rt } = useI18n()
+const props = defineProps<{ block: Record<string, any> }>()
 
-const chips = computed(() =>
-  (tm('security.chips') as unknown[]).map((c) => rt(c as string)),
-)
+const chips = computed(() => (props.block.chips ?? []) as string[])
 </script>
 
 <template>
   <section id="security" class="sec bx-section">
     <div class="bx-container sec__grid">
       <div class="sec__intro bx-reveal" v-reveal>
-        <h2 class="bx-section__title">{{ t('security.title') }}</h2>
-        <p class="sec__body">{{ t('security.body') }}</p>
+        <h2 class="bx-section__title">{{ block.title }}</h2>
+        <p class="sec__body">{{ block.body }}</p>
       </div>
 
       <ul class="sec__chips bx-reveal" v-reveal="120">

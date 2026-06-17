@@ -5,18 +5,20 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
+  块类型 = moat。数据源由 i18n key 改为 api/兜底 props.block（M6-D schema 驱动）。
 -->
 <script setup lang="ts">
-const { t } = useI18n()
+defineProps<{ block: Record<string, any> }>()
 </script>
 
 <template>
   <section id="moat" class="moat bx-section">
     <div class="bx-container">
       <div class="moat__card bx-card bx-reveal" v-reveal>
-        <h2 class="moat__title">{{ t('moat.title') }}</h2>
-        <p class="moat__body">{{ t('moat.body') }}</p>
+        <h2 class="moat__title">{{ block.title }}</h2>
+        <p class="moat__body">{{ block.body }}</p>
 
         <div class="moat__verify" aria-hidden="true">
           <code class="bx-code">
@@ -24,7 +26,7 @@ const { t } = useI18n()
             <span class="moat__arrow">→</span>
             <span class="t-ok">EXIT 0</span>
           </code>
-          <span class="moat__caption bx-code">{{ t('moat.verifyCaption') }}</span>
+          <span v-if="block.verifyCaption" class="moat__caption bx-code">{{ block.verifyCaption }}</span>
         </div>
       </div>
     </div>

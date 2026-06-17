@@ -5,13 +5,15 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
+  块类型 = badge-list。标题/说明/徽章由 i18n key 改为 api/兜底 props.block.items（{label}）。
 -->
 <script setup lang="ts">
-const { t, tm, rt } = useI18n()
+const props = defineProps<{ block: Record<string, any> }>()
 
 const stackItems = computed(() =>
-  (tm('stack.items') as unknown[]).map((s) => rt(s as string)),
+  ((props.block.items ?? []) as { label: string }[]).map((s) => s.label),
 )
 </script>
 
@@ -19,8 +21,8 @@ const stackItems = computed(() =>
   <section id="stack" class="stk bx-section">
     <div class="bx-container stk__inner">
       <div class="bx-section__head bx-reveal" v-reveal>
-        <h2 class="bx-section__title">{{ t('stack.title') }}</h2>
-        <p class="bx-section__desc">{{ t('stack.caption') }}</p>
+        <h2 class="bx-section__title">{{ block.title }}</h2>
+        <p v-if="block.caption" class="bx-section__desc">{{ block.caption }}</p>
       </div>
 
       <ul class="stk__list bx-reveal" v-reveal="120">

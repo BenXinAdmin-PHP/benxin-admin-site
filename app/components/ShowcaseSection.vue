@@ -5,14 +5,16 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
+  块类型 = showcase。标题/字幕由 i18n key 改为 api/兜底 props.block.items（{caption,image}）。
   占位块为自绘抽象界面（品牌渐变 + 几何，零版权 §10）；真实截图 daxing 后补。
 -->
 <script setup lang="ts">
-const { t, tm, rt } = useI18n()
+const props = defineProps<{ block: Record<string, any> }>()
 
 const captions = computed(() =>
-  (tm('showcase.items') as unknown[]).map((s) => rt(s as string)),
+  ((props.block.items ?? []) as { caption: string }[]).map((s) => s.caption),
 )
 
 // 占位说明（装饰性，非可翻译卖点；真实截图后补）
@@ -23,7 +25,7 @@ const placeholderNote = '— preview placeholders, real screenshots coming soon 
   <section id="showcase" class="show bx-section">
     <div class="bx-container">
       <div class="bx-section__head bx-reveal" v-reveal>
-        <h2 class="bx-section__title">{{ t('showcase.title') }}</h2>
+        <h2 class="bx-section__title">{{ block.title }}</h2>
       </div>
 
       <ul class="show__grid">

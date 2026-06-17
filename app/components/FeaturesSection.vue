@@ -5,43 +5,46 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
-  图标为自绘 stroke SVG（零版权 §10）；卡片内容走 i18n features.items 数组。
+  块类型 = feature-grid。卡片内容由 i18n key 改为 api/兜底 props.block.items。
+  图标为自绘 stroke SVG（零版权 §10）：按 item.icon 名称取图，未知名称回退序号、再回退首图。
 -->
 <script setup lang="ts">
-const { t, tm, rt } = useI18n()
-
 interface FeatureItem {
   title: string
   desc: string
+  icon?: string
 }
-const items = computed(() =>
-  (tm('features.items') as unknown[]).map((it) => {
-    const o = it as { title: unknown; desc: unknown }
-    return { title: rt(o.title as string), desc: rt(o.desc as string) } as FeatureItem
-  }),
-)
+const props = defineProps<{ block: Record<string, any> }>()
 
-// 自绘抽象图标（stroke），与 6 卡片一一对应
-const icons: string[][] = [
-  ['M9 8l-4 4 4 4', 'M15 8l4 4-4 4'],
-  ['M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6z', 'M9 11l2 2 4-4'],
-  ['M7 10V8a5 5 0 0 1 10 0v2', 'M5 10h14v9H5z', 'M12 14v2'],
-  [
+const items = computed(() => (props.block.items ?? []) as FeatureItem[])
+
+// 自绘抽象图标（stroke），按名称索引（对齐 seeder icon 名称）
+const ICON_MAP: Record<string, string[]> = {
+  code: ['M9 8l-4 4 4 4', 'M15 8l4 4-4 4'],
+  shield: ['M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6z', 'M9 11l2 2 4-4'],
+  key: ['M7 10V8a5 5 0 0 1 10 0v2', 'M5 10h14v9H5z', 'M12 14v2'],
+  storage: [
     'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z',
     'M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7',
     'M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
   ],
-  ['M4 4h7v7H4z', 'M13 4h7v7h-7z', 'M4 13h7v7H4z', 'M13 13h7v7h-7z'],
-  ['M7 3h10v18H7z', 'M10.5 18h3'],
-]
+  blocks: ['M4 4h7v7H4z', 'M13 4h7v7h-7z', 'M4 13h7v7H4z', 'M13 13h7v7h-7z'],
+  phone: ['M7 3h10v18H7z', 'M10.5 18h3'],
+}
+// 序号回退表（与 ICON_MAP 默认六图同序），用于 item.icon 缺失/未知时
+const ICON_FALLBACK = Object.values(ICON_MAP)
+
+const iconPaths = (item: FeatureItem, i: number): string[] =>
+  (item.icon && ICON_MAP[item.icon]) || ICON_FALLBACK[i] || ICON_FALLBACK[0]
 </script>
 
 <template>
   <section id="features" class="features bx-section">
     <div class="bx-container">
       <div class="bx-section__head bx-reveal" v-reveal>
-        <h2 class="bx-section__title">{{ t('features.title') }}</h2>
+        <h2 class="bx-section__title">{{ block.title }}</h2>
       </div>
 
       <ul class="features__grid">
@@ -54,7 +57,7 @@ const icons: string[][] = [
           <span class="features__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="24" height="24">
               <path
-                v-for="(d, k) in icons[i]"
+                v-for="(d, k) in iconPaths(item, i)"
                 :key="k"
                 :d="d"
                 fill="none"

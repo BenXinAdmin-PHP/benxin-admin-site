@@ -5,41 +5,58 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
+  块类型 = cta。标题/正文/按钮/命令由 i18n key 改为 api/兜底 props.block；
+  代码块小标题（quickstartCaption 非 schema 字段）为前端装饰，仍走 chrome i18n。
 -->
 <script setup lang="ts">
 const { t } = useI18n()
+const props = defineProps<{ block: Record<string, any> }>()
 
-// 快速开始命令（两语言相同，装饰性等宽展示，非可翻译文案）
-const quickstart = [
-  'git clone https://github.com/BenXinAdmin-PHP/benxin-admin-server.git',
-  'composer install',
-  'cp .env.example .env',
-  'php think migrate:run && php think seed:run',
-  'php think run -p 8801',
-]
+interface CtaButton {
+  text: string
+  href?: string
+  variant?: string
+}
+const buttons = computed(() => (props.block.buttons ?? []) as CtaButton[])
+
+// quickstart 为 \n 连接的命令串，按行拆分等宽展示
+const quickstart = computed(() =>
+  String(props.block.quickstart ?? '')
+    .split('\n')
+    .filter((l) => l.trim() !== ''),
+)
+
+const isExternal = (href?: string) => !!href && /^https?:\/\//.test(href)
+const btnClass = (variant?: string) =>
+  variant === 'primary' ? 'bx-btn bx-btn--primary' : 'bx-btn bx-btn--ghost'
 </script>
 
 <template>
-  <section id="cta" class="cta bx-section">
+  <section id="get-started" class="cta bx-section">
     <AuroraBg />
     <div class="bx-container cta__inner">
       <div class="cta__copy bx-reveal" v-reveal>
-        <h2 class="cta__title bx-grad-text">{{ t('cta.title') }}</h2>
-        <p class="cta__body">{{ t('cta.body') }}</p>
+        <h2 class="cta__title bx-grad-text">{{ block.title }}</h2>
+        <p class="cta__body">{{ block.body }}</p>
         <div class="cta__actions">
-          <a :href="GITHUB_URL" target="_blank" rel="noopener" class="bx-btn bx-btn--primary">
-            {{ t('cta.github') }}
-          </a>
-          <a :href="GITEE_URL" target="_blank" rel="noopener" class="bx-btn bx-btn--ghost">
-            {{ t('cta.gitee') }}
+          <a
+            v-for="(btn, i) in buttons"
+            :key="i"
+            :href="btn.href || '#'"
+            :target="isExternal(btn.href) ? '_blank' : undefined"
+            :rel="isExternal(btn.href) ? 'noopener' : undefined"
+            :class="btnClass(btn.variant)"
+          >
+            {{ btn.text }}
           </a>
         </div>
       </div>
 
       <div class="cta__code bx-reveal" v-reveal="140">
         <div class="cta__codebar">
-          <span class="bx-code">{{ t('cta.quickstartCaption') }}</span>
+          <span class="bx-code">{{ t('common.quickstartCaption') }}</span>
         </div>
         <pre class="cta__pre bx-code"><code v-for="(line, i) in quickstart" :key="i" class="cta__line"><span class="cta__prompt">$</span> {{ line }}</code></pre>
       </div>

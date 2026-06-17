@@ -5,30 +5,46 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
+  | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
-  块边界：内容全走 i18n key，为 M6-D schema 化预留（块类型 = hero）。
+  块类型 = hero。数据源由 i18n key 改为 api/兜底 props.block（M6-D schema 驱动）。
 -->
 <script setup lang="ts">
-const { t } = useI18n()
+defineProps<{ block: Record<string, any> }>()
+
+// 外链（http/https）开新标签页；站内锚点同页跳转——保持 M6-A 行为。
+const isExternal = (href?: string) => !!href && /^https?:\/\//.test(href)
 </script>
 
 <template>
   <section class="hero">
     <AuroraBg />
     <div class="bx-container hero__inner">
-      <p class="bx-eyebrow bx-reveal" v-reveal>{{ t('hero.eyebrow') }}</p>
+      <p class="bx-eyebrow bx-reveal" v-reveal>{{ block.eyebrow }}</p>
 
       <h1 class="hero__title bx-reveal" v-reveal="80">
-        <span class="bx-grad-text">{{ t('hero.title') }}</span>
+        <span class="bx-grad-text">{{ block.title }}</span>
       </h1>
 
-      <p class="hero__subtitle bx-reveal" v-reveal="160">{{ t('hero.subtitle') }}</p>
+      <p class="hero__subtitle bx-reveal" v-reveal="160">{{ block.subtitle }}</p>
 
       <div class="hero__actions bx-reveal" v-reveal="240">
-        <a :href="GITHUB_URL" target="_blank" rel="noopener" class="bx-btn bx-btn--primary">
-          {{ t('hero.ctaPrimary') }}
+        <a
+          :href="block.ctaPrimary?.href || '#'"
+          :target="isExternal(block.ctaPrimary?.href) ? '_blank' : undefined"
+          :rel="isExternal(block.ctaPrimary?.href) ? 'noopener' : undefined"
+          class="bx-btn bx-btn--primary"
+        >
+          {{ block.ctaPrimary?.text }}
         </a>
-        <a href="#stack" class="bx-btn bx-btn--ghost">{{ t('hero.ctaSecondary') }}</a>
+        <a
+          :href="block.ctaSecondary?.href || '#'"
+          :target="isExternal(block.ctaSecondary?.href) ? '_blank' : undefined"
+          :rel="isExternal(block.ctaSecondary?.href) ? 'noopener' : undefined"
+          class="bx-btn bx-btn--ghost"
+        >
+          {{ block.ctaSecondary?.text }}
+        </a>
       </div>
 
       <!-- 装饰性终端（等宽字体，零数据，纯视觉） -->
