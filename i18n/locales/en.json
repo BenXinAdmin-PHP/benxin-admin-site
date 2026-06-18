@@ -23,5 +23,12 @@
     "github": "GitHub",
     "gitee": "Gitee",
     "license": "License"
+  },
+  "error": {
+    "404Title": "Page Not Found",
+    "404Desc": "The page you’re looking for was moved, renamed, or never existed.",
+    "genericTitle": "Something Went Wrong",
+    "genericDesc": "The service is temporarily unavailable. Please try again later.",
+    "backHome": "Back to Home"
   }
 }

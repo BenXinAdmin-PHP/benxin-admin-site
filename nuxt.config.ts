@@ -6,7 +6,7 @@
 // | @author    仗键天涯(daxing)
 // | @email     3442535897@qq.com
 // | @date      2026-06-17
-// | @updated   2026-06-17 17:35:00
+// | @updated   2026-06-18（B1-② 通用页 /[slug] 预渲染枚举钩子 + 动态 sitemap 源 + 构建兜底）
 // +----------------------------------------------------------------------
 
 // 站点规范 URL：用于 hreflang / sitemap / canonical。
@@ -17,6 +17,31 @@ const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL || 'https://www.benxinadmin.co
 // dev 默认指本地 server（§12 端口 8801）；prod 由 daxing 上线经 NUXT_PUBLIC_API_BASE 设真实后端。
 // api 不可达时首页回退内置兜底默认内容，nuxt generate 不因后端宕机而失败（硬指标）。
 const API_BASE = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8801'
+
+// B1-②：build 期枚举 B1-① 已发布页清单（GET /api/v1/pages），供 nitro prerender:routes 钩子注入
+// 通用页 /[slug] 预渲染路由。构建兜底（守 §1 硬指标）：超时/失败/非预期 → 返回 []，不阻断 nuxt generate。
+// 排除 home（首页 / 与 /en 已由既有 prerender.routes 覆盖，带 defaultHome 兜底）。
+async function fetchPublishedSlugs(): Promise<string[]> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 5000)
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/pages`, { signal: ctrl.signal })
+    if (!res.ok) {
+      console.warn(`[prerender] /api/v1/pages 返回 HTTP ${res.status}，跳过 [slug] 枚举`)
+      return []
+    }
+    const json = (await res.json()) as { code?: number; data?: Array<{ slug?: string }> }
+    const list = Array.isArray(json?.data) ? json.data : []
+    return list
+      .map((p) => (typeof p?.slug === 'string' ? p.slug : ''))
+      .filter((slug) => slug !== '' && slug !== 'home')
+  } catch (err) {
+    console.warn('[prerender] 拉已发布页清单失败，仅预渲染既有路由：', (err as Error)?.message)
+    return []
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -38,6 +63,20 @@ export default defineNuxtConfig({
       crawlLinks: true,
       routes: ['/', '/en'],
     },
+    // B1-②：build 期把已发布页（≠home）的中/英两路由注入预渲染集；
+    // fetchPublishedSlugs 已含构建兜底，失败返回 [] → 不新增 [slug] 路由、generate 不挂。
+    hooks: {
+      async 'prerender:routes'(routes: Set<string>) {
+        const slugs = await fetchPublishedSlugs()
+        for (const slug of slugs) {
+          routes.add(`/${slug}`)
+          routes.add(`/en/${slug}`)
+        }
+        if (slugs.length > 0) {
+          console.info(`[prerender] 注入 ${slugs.length} 个通用页（中/英各一）：${slugs.join(', ')}`)
+        }
+      },
+    },
   },
 
   css: [
@@ -48,9 +87,16 @@ export default defineNuxtConfig({
   ],
 
   // 站点级配置（@nuxtjs/sitemap + @nuxtjs/robots 共用）
+  // SITE_URL 经 NUXT_PUBLIC_SITE_URL 覆盖，供 canonical/hreflang/og:url/sitemap loc 取绝对 URL。
   site: {
     url: SITE_URL,
     name: 'BenXinAdmin',
+  },
+
+  // B1-②：动态 sitemap 源——server route 在 build 期拉 B1-① 清单产已发布页（≠home）双语条目
+  // （含 lastmod + i18n hreflang）；源拉取失败退化为仅既有静态条目（home），不阻断构建。
+  sitemap: {
+    sources: ['/__sitemap__/pages'],
   },
 
   // 官网允许收录（与后台 noindex 相反）
