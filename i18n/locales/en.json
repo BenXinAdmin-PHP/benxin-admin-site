@@ -30,5 +30,22 @@
     "genericTitle": "Something Went Wrong",
     "genericDesc": "The service is temporarily unavailable. Please try again later.",
     "backHome": "Back to Home"
+  },
+  "preview": {
+    "banner": "Draft Preview · 草稿预览",
+    "bannerHint": "Unpublished content for live builder preview only — never indexed by search engines.",
+    "langLabel": "Preview language: ",
+    "waiting": {
+      "title": "Waiting for preview data…",
+      "desc": "Waiting for the admin builder to push the current editor content. Please hold on."
+    },
+    "direct": {
+      "title": "Open this page from the admin builder",
+      "desc": "Draft preview must be opened via the “Preview” button in the admin builder. Direct access cannot fetch editor content."
+    },
+    "invalid": {
+      "title": "Invalid preview data",
+      "desc": "The received preview data is malformed. Please go back to the admin builder and try again."
+    }
   }
 }

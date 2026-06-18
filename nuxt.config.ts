@@ -7,6 +7,7 @@
 // | @email     3442535897@qq.com
 // | @date      2026-06-17
 // | @updated   2026-06-18（B1-② 通用页 /[slug] 预渲染枚举钩子 + 动态 sitemap 源 + 构建兜底）
+// | @updated   2026-06-18（B2-① 草稿预览 /preview：adminOrigin 白名单 + 不预渲染/noindex/排除 sitemap）
 // +----------------------------------------------------------------------
 
 // 站点规范 URL：用于 hreflang / sitemap / canonical。
@@ -17,6 +18,12 @@ const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL || 'https://www.benxinadmin.co
 // dev 默认指本地 server（§12 端口 8801）；prod 由 daxing 上线经 NUXT_PUBLIC_API_BASE 设真实后端。
 // api 不可达时首页回退内置兜底默认内容，nuxt generate 不因后端宕机而失败（硬指标）。
 const API_BASE = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8801'
+
+// B2-①（ADR-25）：草稿预览页 /preview 的「可信发送方 origin 白名单」——只接受此 origin 经 postMessage
+// 推来的预览数据（精确相等校验，含协议+host+port）。语义不同于 SITE_URL/API_BASE（这是「谁可以给我
+// 发预览内容」的来源），故单列。dev 占位为 web 后台本地 Vite origin（默认端口 5173）；
+// prod 真实后台域名由 daxing 上线经 NUXT_PUBLIC_ADMIN_ORIGIN 设（须与 B2-② web 后台实际 origin 一致）。
+const ADMIN_ORIGIN = process.env.NUXT_PUBLIC_ADMIN_ORIGIN || 'http://localhost:5173'
 
 // B1-②：build 期枚举 B1-① 已发布页清单（GET /api/v1/pages），供 nitro prerender:routes 钩子注入
 // 通用页 /[slug] 预渲染路由。构建兜底（守 §1 硬指标）：超时/失败/非预期 → 返回 []，不阻断 nuxt generate。
@@ -53,7 +60,20 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: API_BASE,
+      // B2-①：草稿预览可信发送方 origin（见上方 ADMIN_ORIGIN 说明）
+      adminOrigin: ADMIN_ORIGIN,
     },
+  },
+
+  // B2-①（ADR-25）：草稿预览路由不预渲染（i18n 产 /preview 中 + /en/preview 英，两者同等处理）。
+  // prerender:false → nuxt generate 不打成静态页（即便日后被 crawlLinks 触达也不会预渲染）。
+  // 不进 sitemap：sitemap 源为显式 API sources + 仅预渲染路由自动发现，/preview 既非源内、又不预渲染，
+  // 自然不入 sitemap（已实测验证），无需额外 routeRule。
+  // 不被索引：robots 收口走下方 robots.disallow（SSG 静态托管下 robots.txt 可靠，X-Robots-Tag 仅 SSR），
+  // 页面内另以 useHead 注 noindex,nofollow，三重兜底确保预览页绝不被索引。
+  routeRules: {
+    '/preview': { prerender: false },
+    '/en/preview': { prerender: false },
   },
 
   // 官网内容静态，优先 SSG（部署简单、收录稳定）；首页双语预渲染。
@@ -99,9 +119,11 @@ export default defineNuxtConfig({
     sources: ['/__sitemap__/pages'],
   },
 
-  // 官网允许收录（与后台 noindex 相反）
+  // 官网允许收录（与后台 noindex 相反）；草稿预览 /preview 显式 Disallow（B2-①）。
+  // @nuxtjs/robots 的 i18n 集成会自动把 /preview 本地化补出 /en/preview，故此处只列 /preview。
   robots: {
     allow: '/',
+    disallow: ['/preview'],
   },
 
   i18n: {
