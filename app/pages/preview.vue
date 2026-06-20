@@ -5,6 +5,7 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-18
+  | @updated   2026-06-20（B-增强-①补：收到 payload.lang 后运行时切 chrome locale，整页中英一致）
   +----------------------------------------------------------------------
   B2-①（ADR-25）：后台搭建器经 postMessage 把「当前编辑器 blocks（含未保存改动）+ lang」推入本页，
   复用 B1-② 的 resolveBlocksByLang + <PageRenderer> 渲染真实暗色科技风。零 server、零 token、零 api。
@@ -17,7 +18,9 @@
 import { resolveBlocksByLang } from '~/utils/resolveBlocks'
 import type { ApiBlock } from '~/types/page'
 
-const { t } = useI18n()
+// 取全局 i18n 作用域的 locale（可写 ref）：chrome（菜单/语言切换/横幅/footer）的 t() 皆绑此 locale。
+// 运行时改 locale.value 仅切文案重渲，不触发 @nuxtjs/i18n 路由跳转（区别于会导航的 setLocale，守「不换路由」）。
+const { t, locale } = useI18n()
 const config = useRuntimeConfig()
 // 可信发送方 origin 白名单（nuxt.config ADMIN_ORIGIN，dev 占位 http://localhost:5173）
 const adminOrigin = config.public.adminOrigin as string
@@ -65,6 +68,9 @@ function onMessage(event: MessageEvent) {
   }
   rawBlocks.value = event.data.blocks as Array<Record<string, unknown>>
   previewLang.value = event.data.lang
+  // chrome 与内容区同源同值：同一 payload.lang 既驱动 blocks 解析，又切运行时 chrome locale，
+  // 令菜单/语言切换/草稿横幅/footer 与内容区语言一致（不引入第二个语言状态）。直开/等待态不到此处，保持默认 locale。
+  locale.value = event.data.lang
   state.value = 'ready'
 }
 
