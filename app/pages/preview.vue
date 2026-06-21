@@ -12,7 +12,8 @@
   B2-①（ADR-25）：后台搭建器经 postMessage 把「当前编辑器 blocks（含未保存改动）+ lang」推入本页，
   复用 B1-② 的 resolveBlocksByLang + <PageRenderer> 渲染真实暗色科技风。零 server、零 token、零 api。
   安全关键：仅接受 event.origin === runtimeConfig.public.adminOrigin 的消息（精确相等），其余一律丢弃；
-  发 'preview-ready' 握手用显式 targetOrigin（非 '*'）；渲染走 PageRenderer {{ }} 转义，无 v-html。
+  发 'preview-ready' 握手用显式 targetOrigin（非 '*'）；8 结构化块走 PageRenderer {{ }} 转义无 v-html，
+  唯 richtext 块 v-html——编辑态未经 server 净化，故传 :sanitize=true 令 PageRenderer 先 DOMPurify 再渲（ADR-27-③ 修订① D 项）。
   noindex：useHead 注 noindex,nofollow（与官网「允许收录」相反）；不预渲染 / 不进 sitemap 见 nuxt.config routeRules。
   内容仅内存态、刷新即清；直开/超时/非法数据走友好态不崩。
 -->
@@ -134,8 +135,9 @@ onUnmounted(() => {
 
     <!-- 内容由 postMessage 在 mount 后到达，仅客户端渲染 -->
     <ClientOnly>
-      <!-- 渲染态：复用已发布页同管线（resolveBlocksByLang → PageRenderer，零改 PageRenderer） -->
-      <PageRenderer v-if="state === 'ready'" :blocks="resolvedBlocks" />
+      <!-- 渲染态：复用已发布页同管线（resolveBlocksByLang → PageRenderer）；
+           ADR-27-③：编辑态 richtext 未经 server 净化 → sanitize 传 true，令 PageRenderer 对 richtext 经 DOMPurify 后再 v-html。 -->
+      <PageRenderer v-if="state === 'ready'" :blocks="resolvedBlocks" :sanitize="true" />
 
       <!-- 友好态：等待 / 直开引导 / 数据非法，均暗色风不崩 -->
       <div v-else class="preview__placeholder">
