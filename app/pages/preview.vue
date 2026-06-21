@@ -27,8 +27,11 @@ import type { ApiBlock } from '~/types/page'
 // 由 onBeforeRouteLeave 拦掉其引发的 /en/preview 导航，达成「只切 locale、不改 URL、不丢数据」。
 const { t, setLocale } = useI18n()
 const config = useRuntimeConfig()
-// 可信发送方 origin 白名单（nuxt.config ADMIN_ORIGIN，dev 占位 http://localhost:5173）
-const adminOrigin = config.public.adminOrigin as string
+// 可信发送方 origin 白名单（nuxt.config ADMIN_ORIGIN，dev 占位 http://localhost:5173）。
+// 去尾斜杠规范化（对称 web builder.vue 的 siteBase）：浏览器给的 origin 永无尾斜杠，若配置带尾斜杠
+// （如 prod https://admin.x.com/）会致 preview-ready 的 targetOrigin 不匹配被静默丢弃 / onMessage 精确比较失败
+// → 握手断、永停「等待数据」。此处统一规范化，下游 onMessage 比较与 preview-ready targetOrigin 均复用此值。
+const adminOrigin = ((config.public.adminOrigin as string) || '').replace(/\/+$/, '')
 
 // 守卫：拦截 setLocale 在 prefix_except_default 策略下引发的「跳到本地化 preview 路由」导航
 // （/preview 无前缀=zh，切 en 会试图跳 /en/preview）。仅拦 preview 自身的本地化目标，不影响其它跳转。
