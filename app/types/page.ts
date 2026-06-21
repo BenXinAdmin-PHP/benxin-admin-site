@@ -14,3 +14,14 @@
 export interface ApiBlock extends Record<string, unknown> {
   type: string
 }
+
+/**
+ * 公开渲染接口返回的页面级 SEO（C2 ADR-26，③-①/③-①补）。
+ * server 已按 lang 解析：seo_title/seo_description 为字符串（空回退 zh）；og_image 单值 URL（非 i18n）。
+ * 页无 seo → 接口返 seo:null（site 走回退链：hero 派生 / 站点级文案 / 默认 og 图）。
+ */
+export interface ApiPageSeo {
+  seo_title?: string | null
+  seo_description?: string | null
+  og_image?: string | null
+}

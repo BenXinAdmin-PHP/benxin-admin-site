@@ -5,6 +5,7 @@
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-18
+  | @updated   2026-06-21（C2 ③-②：head 优先用页面 seo + 回退链，og:image 绝对化）
   +----------------------------------------------------------------------
   B1-②（ADR-24/ADR-23）：@nuxtjs/i18n prefix_except_default 自动产 /<slug>（中）与 /en/<slug>（英）两路由；
   setup 按 slug+当前 locale 拉 ${apiBase}/api/v1/pages/:slug?lang= → 复用 <PageRenderer> 渲染（与首页同管线）。
@@ -13,7 +14,8 @@
   SEO（C1 最小）：title/description 从 hero 块派生；canonical/hreflang/og:url 沿用 app.vue useLocaleHead i18n 自动注入。
 -->
 <script setup lang="ts">
-import type { ApiBlock } from '~/types/page'
+import type { ApiBlock, ApiPageSeo } from '~/types/page'
+import { pickSeoString, resolveOgImage } from '~/utils/pageSeo'
 
 const route = useRoute()
 const { locale } = useI18n()
@@ -33,6 +35,7 @@ interface PageData {
   slug?: string
   title?: string
   blocks?: ApiBlock[]
+  seo?: ApiPageSeo | null
 }
 interface PageResponse {
   code: number
@@ -76,31 +79,37 @@ function truncate(s: string, max = 150): string {
   return s.length > max ? s.slice(0, max).trimEnd() + '…' : s
 }
 
-// title 取值链：hero.title → 单页接口 data.title（后台页面名，M6-B 确返）→ 美化 slug；统一拼站点名后缀。
+// title 取值链（C2 ③-②）：seo.seo_title → hero.title → 单页接口 data.title（后台页面名，M6-B 确返）
+// → 美化 slug；统一拼站点名后缀。seo 为 null/未填 → 链同 C1 现状（hero 派生）。
 const prettySlug = computed(() =>
   slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
 )
 const pageTitle = computed(() => {
   const hero = firstBlock('hero')
   return (
-    asString(hero?.title) || asString(page.value?.title) || prettySlug.value
+    pickSeoString(page.value?.seo?.seo_title) ||
+    asString(hero?.title) ||
+    asString(page.value?.title) ||
+    prettySlug.value
   )
 })
 const fullTitle = computed(() => `${pageTitle.value} · ${site.name}`)
 
-// description 取值链：hero.subtitle → 首个 prose.body 截断 ~150 → 站点默认描述。
+// description 取值链（C2 ③-②）：seo.seo_description → hero.subtitle → 首个 prose.body 截断 ~150 → 站点默认描述。
 const { t } = useI18n()
 const description = computed(() => {
   const hero = firstBlock('hero')
   const prose = firstBlock('prose')
   return (
+    pickSeoString(page.value?.seo?.seo_description) ||
     asString(hero?.subtitle) ||
     truncate(asString(prose?.body)) ||
     t('site.description')
   )
 })
 
-const ogImage = `${site.url}/og/og-default.png`
+// og:image（C2 ③-②）：seo.og_image（绝对化：http 原样 / 相对用 siteUrl 拼）→ 站点默认图绝对址。
+const ogImage = computed(() => resolveOgImage(page.value?.seo?.og_image, site.url as string))
 // og:url 取当前路由绝对 URL（与 i18n 注入的 canonical 同址：/<slug> 或 /en/<slug>）。
 const ogUrl = computed(() => `${site.url}${route.path}`)
 
@@ -113,13 +122,13 @@ useSeoMeta({
   ogDescription: () => description.value,
   ogType: 'website',
   ogUrl: () => ogUrl.value,
-  ogImage,
+  ogImage: () => ogImage.value,
   ogImageWidth: 1200,
   ogImageHeight: 630,
   twitterCard: 'summary_large_image',
   twitterTitle: () => fullTitle.value,
   twitterDescription: () => description.value,
-  twitterImage: ogImage,
+  twitterImage: () => ogImage.value,
 })
 </script>
 
