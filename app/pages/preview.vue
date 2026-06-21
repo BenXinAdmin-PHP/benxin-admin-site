@@ -6,6 +6,7 @@
   | @email     3442535897@qq.com
   | @date      2026-06-18
   | @updated   2026-06-20（B-增强-①补：收到 payload.lang 后运行时切 chrome locale，整页中英一致）
+  | @updated   2026-06-21（①补-fix：useI18n 改取全局 scope，根治 chrome 文案不随 locale 重渲）
   +----------------------------------------------------------------------
   B2-①（ADR-25）：后台搭建器经 postMessage 把「当前编辑器 blocks（含未保存改动）+ lang」推入本页，
   复用 B1-② 的 resolveBlocksByLang + <PageRenderer> 渲染真实暗色科技风。零 server、零 token、零 api。
@@ -18,9 +19,11 @@
 import { resolveBlocksByLang } from '~/utils/resolveBlocks'
 import type { ApiBlock } from '~/types/page'
 
-// 取全局 i18n 作用域的 locale（可写 ref）：chrome（菜单/语言切换/横幅/footer）的 t() 皆绑此 locale。
-// 运行时改 locale.value 仅切文案重渲，不触发 @nuxtjs/i18n 路由跳转（区别于会导航的 setLocale，守「不换路由」）。
-const { t, locale } = useI18n()
+// 必须取「全局」i18n 作用域（useScope:'global'）：裸 useI18n() 返回的是局部 composer，其 locale 仅从全局 root
+// 单向同步、写它不回写全局，故 chrome 各组件（SiteHeader/SiteFooter/LangSwitch，均从全局 root 同步）不会重渲——
+// 这是 ①补(03fba26) chrome 文案不随 lang 切的根因。改取全局 composer：写 locale.value 即改全局 root，所有
+// 局部 composer 随之同步、t() 整页重渲；且仅切显示 locale、不经路由（区别于会导航的 setLocale），守「不换路由」。
+const { t, locale } = useI18n({ useScope: 'global' })
 const config = useRuntimeConfig()
 // 可信发送方 origin 白名单（nuxt.config ADMIN_ORIGIN，dev 占位 http://localhost:5173）
 const adminOrigin = config.public.adminOrigin as string
