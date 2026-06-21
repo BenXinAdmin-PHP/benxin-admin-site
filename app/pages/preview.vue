@@ -7,6 +7,7 @@
   | @date      2026-06-18
   | @updated   2026-06-20（B-增强-①补：收到 payload.lang 后运行时切 chrome locale，整页中英一致）
   | @updated   2026-06-21（①补-fix：useI18n 改取全局 scope，根治 chrome 文案不随 locale 重渲）
+  | @updated   2026-06-21（①补-fix-2：①补-fix 证伪——改用 nuxt-i18n setLocale 应用 locale + 路由守卫拦导航）
   +----------------------------------------------------------------------
   B2-①（ADR-25）：后台搭建器经 postMessage 把「当前编辑器 blocks（含未保存改动）+ lang」推入本页，
   复用 B1-② 的 resolveBlocksByLang + <PageRenderer> 渲染真实暗色科技风。零 server、零 token、零 api。
@@ -19,14 +20,32 @@
 import { resolveBlocksByLang } from '~/utils/resolveBlocks'
 import type { ApiBlock } from '~/types/page'
 
-// 必须取「全局」i18n 作用域（useScope:'global'）：裸 useI18n() 返回的是局部 composer，其 locale 仅从全局 root
-// 单向同步、写它不回写全局，故 chrome 各组件（SiteHeader/SiteFooter/LangSwitch，均从全局 root 同步）不会重渲——
-// 这是 ①补(03fba26) chrome 文案不随 lang 切的根因。改取全局 composer：写 locale.value 即改全局 root，所有
-// 局部 composer 随之同步、t() 整页重渲；且仅切显示 locale、不经路由（区别于会导航的 setLocale），守「不换路由」。
-const { t, locale } = useI18n({ useScope: 'global' })
+// chrome 组件（SiteHeader/SiteFooter/横幅）的 useI18n() 无参=全局 scope（vue-i18n getScope：无 args 且无 <i18n> 块→global）。
+// ①补/①补-fix 失效真因：裸写 composer.locale.value 走不通 nuxt-i18n 的 setLocaleSuspend→finalizePendingLocaleChange
+// →ctx.setLocale 这条 t() 实际依赖的响应式通道（①补-fix 的 useScope:'global' 与无参同为 global、是 no-op）。
+// 正解：用模块公开的 setLocale(lang)——它=loadAndSetLocale(立即应用 locale 并重渲 chrome)+navigate(改URL)；
+// 由 onBeforeRouteLeave 拦掉其引发的 /en/preview 导航，达成「只切 locale、不改 URL、不丢数据」。
+const { t, setLocale } = useI18n()
 const config = useRuntimeConfig()
 // 可信发送方 origin 白名单（nuxt.config ADMIN_ORIGIN，dev 占位 http://localhost:5173）
 const adminOrigin = config.public.adminOrigin as string
+
+// 守卫：拦截 setLocale 在 prefix_except_default 策略下引发的「跳到本地化 preview 路由」导航
+// （/preview 无前缀=zh，切 en 会试图跳 /en/preview）。仅拦 preview 自身的本地化目标，不影响其它跳转。
+// 效果：setLocale 的 locale 应用（chrome 重渲）已在 navigate 前完成，导航被拦→地址栏维持 /preview、预览数据不丢。
+onBeforeRouteLeave((to) => {
+  if (to.path === '/preview' || to.path === '/en/preview') return false
+  return true
+})
+
+/** 应用预览语言到 chrome（不导航）：setLocale 先 apply（重渲）再 navigate（被守卫拦截）；导航中止异常吞掉。 */
+async function applyPreviewLocale(lang: Lang): Promise<void> {
+  try {
+    await setLocale(lang)
+  } catch {
+    // 导航被守卫中止可能抛 navigation aborted——locale 已在 navigate 前应用，安全忽略。
+  }
+}
 
 // 预览页绝不可被搜索引擎收录（与官网其它页「允许收录」相反）；nuxt.config routeRules 另注 X-Robots-Tag。
 useHead({
@@ -71,9 +90,10 @@ function onMessage(event: MessageEvent) {
   }
   rawBlocks.value = event.data.blocks as Array<Record<string, unknown>>
   previewLang.value = event.data.lang
-  // chrome 与内容区同源同值：同一 payload.lang 既驱动 blocks 解析，又切运行时 chrome locale，
-  // 令菜单/语言切换/草稿横幅/footer 与内容区语言一致（不引入第二个语言状态）。直开/等待态不到此处，保持默认 locale。
-  locale.value = event.data.lang
+  // chrome 与内容区同源同值：同一 payload.lang 既驱动 blocks 解析（previewLang），又经 setLocale 应用 chrome
+  // 显示 locale，令菜单/语言切换/草稿横幅/footer 与内容区语言一致（不引入第二个语言状态）。
+  // 直开/等待态不到此处，保持默认 locale。
+  void applyPreviewLocale(event.data.lang)
   state.value = 'ready'
 }
 
