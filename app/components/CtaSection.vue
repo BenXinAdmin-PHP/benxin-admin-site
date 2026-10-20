@@ -11,6 +11,7 @@
   代码块小标题（quickstartCaption 非 schema 字段）为前端装饰，仍走 chrome i18n。
 -->
 <script setup lang="ts">
+import { safeHref } from '~/utils/safeHref'
 const { t } = useI18n()
 const props = defineProps<{ block: Record<string, any> }>()
 
@@ -44,7 +45,7 @@ const btnClass = (variant?: string) =>
           <a
             v-for="(btn, i) in buttons"
             :key="i"
-            :href="btn.href || '#'"
+            :href="safeHref(btn.href)"
             :target="isExternal(btn.href) ? '_blank' : undefined"
             :rel="isExternal(btn.href) ? 'noopener' : undefined"
             :class="btnClass(btn.variant)"

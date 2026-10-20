@@ -1,23 +1,28 @@
 <!--
   +----------------------------------------------------------------------
   | @project   BenXinAdmin
-  | @mission   首页区块 · 截图墙 Showcase（本阶段自绘 CSS/SVG 占位，块类型 = showcase）
+  | @mission   首页区块 · 截图墙 Showcase（支持真实截图，缺图时显示自绘预览）
   | @author    仗键天涯(daxing)
   | @email     3442535897@qq.com
   | @date      2026-06-17
   | @updated   2026-06-17 17:35:00
   +----------------------------------------------------------------------
   块类型 = showcase。标题/字幕由 i18n key 改为 api/兜底 props.block.items（{caption,image}）。
-  占位块为自绘抽象界面（品牌渐变 + 几何，零版权 §10）；真实截图 daxing 后补。
+  image 从页面块数据读取；缺图时回退自绘抽象界面。
 -->
 <script setup lang="ts">
+import { safeHref } from '~/utils/safeHref'
+
 const props = defineProps<{ block: Record<string, any> }>()
 
-const captions = computed(() =>
-  ((props.block.items ?? []) as { caption: string }[]).map((s) => s.caption),
+const items = computed(() =>
+  ((props.block.items ?? []) as { caption: string; image?: string }[]).map((item) => {
+    const image = safeHref(item.image)
+    return { caption: item.caption, image: image === '#' ? '' : image }
+  }),
 )
 
-// 占位说明（装饰性，非可翻译卖点；真实截图后补）
+const hasPlaceholder = computed(() => items.value.some((item) => !item.image))
 const placeholderNote = '— preview placeholders, real screenshots coming soon —'
 </script>
 
@@ -30,13 +35,16 @@ const placeholderNote = '— preview placeholders, real screenshots coming soon 
 
       <ul class="show__grid">
         <li
-          v-for="(cap, i) in captions"
+          v-for="(item, i) in items"
           :key="i"
           class="show__card bx-card bx-reveal"
           v-reveal="i * 80"
         >
+          <div v-if="item.image" class="show__art">
+            <img class="show__image" :src="item.image" :alt="item.caption" loading="lazy" />
+          </div>
           <!-- 自绘抽象界面占位（按 variant 切换布局） -->
-          <div class="show__art" :data-variant="i" aria-hidden="true">
+          <div v-else class="show__art" :data-variant="i" aria-hidden="true">
             <div class="show__bar">
               <span /><span /><span />
             </div>
@@ -68,11 +76,11 @@ const placeholderNote = '— preview placeholders, real screenshots coming soon 
               </template>
             </div>
           </div>
-          <p class="show__caption">{{ cap }}</p>
+          <p class="show__caption">{{ item.caption }}</p>
         </li>
       </ul>
 
-      <p class="show__note bx-code">{{ placeholderNote }}</p>
+      <p v-if="hasPlaceholder" class="show__note bx-code">{{ placeholderNote }}</p>
     </div>
   </section>
 </template>
@@ -94,6 +102,11 @@ const placeholderNote = '— preview placeholders, real screenshots coming soon 
   aspect-ratio: 4 / 3;
   display: flex;
   flex-direction: column;
+}
+.show__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .show__bar {
   display: flex;

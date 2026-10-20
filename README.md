@@ -43,7 +43,7 @@ public/
 
 - 字体：仅 OFL 可商用、自托管 woff2，无 Google Fonts 等第三方 CDN 在线引用；OFL 协议随字体存档于 `public/fonts/`。
 - 图标：自绘 stroke SVG（零版权）。
-- 图片：截图墙为自绘 CSS/SVG 占位，OG 图自绘渐变 + 几何（零版权）；真实截图后补。
+- 图片：截图墙读取页面块 `items[].image` 展示真实截图；未提供时显示自绘 CSS/SVG 预览。OG 图自绘渐变 + 几何（零版权）。
 - 极光背景：纯 CSS 极光（零版权），尊重 `prefers-reduced-motion`。
 
 ## 协议

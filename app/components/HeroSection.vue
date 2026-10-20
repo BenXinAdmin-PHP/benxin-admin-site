@@ -10,6 +10,7 @@
   块类型 = hero。数据源由 i18n key 改为 api/兜底 props.block（M6-D schema 驱动）。
 -->
 <script setup lang="ts">
+import { safeHref } from '~/utils/safeHref'
 defineProps<{ block: Record<string, any> }>()
 
 // 外链（http/https）开新标签页；站内锚点同页跳转——保持 M6-A 行为。
@@ -30,7 +31,7 @@ const isExternal = (href?: string) => !!href && /^https?:\/\//.test(href)
 
       <div class="hero__actions bx-reveal" v-reveal="240">
         <a
-          :href="block.ctaPrimary?.href || '#'"
+          :href="safeHref(block.ctaPrimary?.href)"
           :target="isExternal(block.ctaPrimary?.href) ? '_blank' : undefined"
           :rel="isExternal(block.ctaPrimary?.href) ? 'noopener' : undefined"
           class="bx-btn bx-btn--primary"
@@ -38,7 +39,7 @@ const isExternal = (href?: string) => !!href && /^https?:\/\//.test(href)
           {{ block.ctaPrimary?.text }}
         </a>
         <a
-          :href="block.ctaSecondary?.href || '#'"
+          :href="safeHref(block.ctaSecondary?.href)"
           :target="isExternal(block.ctaSecondary?.href) ? '_blank' : undefined"
           :rel="isExternal(block.ctaSecondary?.href) ? 'noopener' : undefined"
           class="bx-btn bx-btn--ghost"
